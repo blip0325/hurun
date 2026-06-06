@@ -15,6 +15,8 @@
         .table-scroll {
             padding-bottom: 16px;
         }
+
+
     </style>
 </head>
 
@@ -113,6 +115,7 @@
                                 <td
                                     v-for="h in headers"
                                     :key="h"
+                                    :data-col="h"
                                     v-show="visibleColumns[h]"
                                     v-html="formatCell(h, row[h])"
                                 ></td>
@@ -314,6 +317,10 @@
                             }
                             return '';
                         }).join('');
+                    }
+
+                    if (key === '排名') {
+                        return escHtml(value.replace(/No\.\s*/gi, ''));
                     }
 
                     return escHtml(value);

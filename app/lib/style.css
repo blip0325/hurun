@@ -235,7 +235,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     font-size: 14px;
-    white-space: nowrap;
+    table-layout: auto;
 }
 
 thead {
@@ -277,10 +277,8 @@ thead th.sorted .sort-icon {
 tbody td {
     padding: 10px 14px;
     border-bottom: 1px solid #f0f0f0;
-    max-width: 300px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word;
 }
 
 tbody tr {
@@ -407,7 +405,6 @@ tbody tr:nth-child(even):hover {
     tbody td {
         padding: 8px 8px;
         font-size: 12px;
-        max-width: 120px;
     }
 }
 
@@ -420,9 +417,5 @@ tbody tr:nth-child(even):hover {
         padding: 4px 8px;
         font-size: 11px;
         gap: 3px;
-    }
-
-    tbody td {
-        max-width: 80px;
     }
 }
