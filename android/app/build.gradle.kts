@@ -36,6 +36,7 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-测试"
+            resValue("string", "app_name", "胡润榜单测试")
         }
     }
 
