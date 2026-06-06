@@ -29,10 +29,16 @@
                 <h1 class="app-title">🏆 胡润百富榜</h1>
                 <div class="controls-group">
                     <!-- 年份过滤 -->
-                    <select class="year-select" v-model="yearFilter" @change="onYearChange">
-                        <option value="">全部年份</option>
-                        <option v-for="y in years" :key="y" :value="y">{{ y }}年</option>
-                    </select>
+                    <div class="year-dropdown" @click.stop>
+                        <button class="year-dropdown-trigger" @click="showYearMenu = !showYearMenu">
+                            <span>{{ yearFilter ? yearFilter + '年' : '全部年份' }}</span>
+                            <svg class="yd-arrow" :class="{ open: showYearMenu }" width="10" height="10" viewBox="0 0 10 10"><path d="M2 3.5l3 3 3-3" stroke="#888" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                        <ul class="year-dropdown-menu" :class="{ show: showYearMenu }">
+                            <li :class="{ active: yearFilter === '' }" @click="selectYear('')">全部年份</li>
+                            <li v-for="y in years" :key="y" :class="{ active: yearFilter == y }" @click="selectYear(y)">{{ y }}年</li>
+                        </ul>
+                    </div>
 
                     <!-- 搜索框 -->
                     <div class="search-wrapper">
@@ -174,6 +180,7 @@
                 const sortOrder = ref('desc');
                 const searchQuery = ref('');
                 const yearFilter = ref('');
+                const showYearMenu = ref(false);
                 const showColvis = ref(false);
                 const isMobile = ref(window.innerWidth <= 600);
                 const visibleColumns = ref(
@@ -398,6 +405,12 @@
 
                 function onYearChange() {
                     currentPage.value = 1;
+                    showYearMenu.value = false;
+                }
+
+                function selectYear(y) {
+                    yearFilter.value = y;
+                    onYearChange();
                 }
 
                 function onColvisChange() {
@@ -593,11 +606,10 @@
                     currentPage.value = 1;
                 });
 
-                // 点击外部关闭列可见性菜单
-                const closeColvis = (e) => {
-                    if (showColvis.value) {
-                        showColvis.value = false;
-                    }
+                // 点击外部关闭列可见性菜单 & 年份菜单
+                const closePopups = (e) => {
+                    if (showColvis.value) showColvis.value = false;
+                    if (showYearMenu.value) showYearMenu.value = false;
                 };
 
                 // 浏览器前进后退
@@ -620,14 +632,14 @@
 
                 // ===== 生命周期 =====
                 onMounted(async () => {
-                    document.addEventListener('click', closeColvis);
+                    document.addEventListener('click', closePopups);
                     window.addEventListener('popstate', onPopState);
                     window.addEventListener('resize', onResize);
                     await loadAllData();
                 });
 
                 onUnmounted(() => {
-                    document.removeEventListener('click', closeColvis);
+                    document.removeEventListener('click', closePopups);
                     window.removeEventListener('popstate', onPopState);
                     window.removeEventListener('resize', onResize);
                 });
@@ -637,7 +649,7 @@
                     // state
                     allData, loadDone,
                     currentPage, pageSize, sortKey, sortOrder,
-                    searchQuery, yearFilter,
+                    searchQuery, yearFilter, showYearMenu,
                     showColvis, visibleColumns,
                     tableScroll, isMobile,
                     // computed
@@ -646,7 +658,7 @@
                     totalPages,
                     // methods
                     setSort, goToPage, onPageSizeUpdate,
-                    onYearChange, onColvisChange,
+                    onYearChange, selectYear, onColvisChange,
                     executeSearch, clearSearch, formatCell,
                     handleCellClick, exportCSV
                 };

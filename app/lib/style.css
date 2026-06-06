@@ -46,10 +46,10 @@ body {
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 4px;
+    margin-bottom: 8px;
     background: white;
-    padding: 16px 20px;
+    padding: 2px 12px;
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
@@ -89,8 +89,8 @@ body {
 .search-wrapper input {
     border: none;
     outline: none;
-    padding: 8px 12px;
-    font-size: 14px;
+    padding: 4px 10px;
+    font-size: 13px;
     width: 220px;
     background: transparent;
 }
@@ -98,7 +98,7 @@ body {
 .search-wrapper button {
     border: none;
     background: none;
-    padding: 8px 12px;
+    padding: 4px 10px;
     cursor: pointer;
     color: var(--text-muted);
     transition: color 0.2s;
@@ -120,20 +120,89 @@ body {
     color: #dc3545 !important;
 }
 
-/* 年份选择器 */
-.year-select {
-    padding: 8px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 14px;
-    background: white;
-    cursor: pointer;
-    outline: none;
-    transition: border-color 0.2s;
+/* 年份选择器（自定义下拉） */
+.year-dropdown {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
 }
 
-.year-select:focus {
+.year-dropdown-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 13px;
+    color: #333;
+    background: #f5f6f8;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.year-dropdown-trigger:hover {
     border-color: var(--primary-color);
+    background: #f0f2f5;
+}
+
+.yd-arrow {
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+.yd-arrow.open {
+    transform: rotate(180deg);
+}
+
+.year-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 1100;
+    min-width: 100%;
+    max-height: 260px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    list-style: none;
+    padding: 4px 0;
+    margin: 0;
+}
+
+.year-dropdown-menu.show {
+    display: block;
+    animation: ydFadeIn 0.15s ease;
+}
+
+.year-dropdown-menu li {
+    padding: 6px 14px;
+    font-size: 13px;
+    color: #333;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.1s;
+}
+
+.year-dropdown-menu li:hover {
+    background: var(--hover-bg);
+}
+
+.year-dropdown-menu li.active {
+    color: var(--primary-color);
+    font-weight: 600;
+    background: var(--hover-bg);
+}
+
+@keyframes ydFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* 工具栏 */
@@ -344,7 +413,7 @@ tbody tr:nth-child(even):hover {
     }
 
     .app-header {
-        padding: 10px 10px;
+        padding: 2px 8px;
         border-radius: 0;
         margin-bottom: 0;
     }
@@ -375,8 +444,14 @@ tbody tr:nth-child(even):hover {
         font-size: 13px;
     }
 
-    .year-select {
-        font-size: 13px;
+    .year-dropdown-trigger {
+        font-size: 12px;
+        padding: 3px 8px;
+    }
+
+    .year-dropdown-menu li {
+        font-size: 12px;
+        padding: 5px 12px;
     }
 
     .toolbar {
@@ -409,7 +484,7 @@ tbody tr:nth-child(even):hover {
 
 @media (max-width: 480px) {
     .app-header {
-        padding: 10px;
+        padding: 2px 6px;
     }
 
     .toolbar-btn {
@@ -430,7 +505,7 @@ tbody tr:nth-child(even):hover {
 }
 
 .android-webview .app-header {
-    padding-top: calc(16px + var(--android-status-bar-height));
+    padding-top: calc(2px + var(--android-status-bar-height));
 }
 
 .android-webview .app-container {
@@ -476,10 +551,33 @@ tbody tr:nth-child(even):hover {
         color: #f0f0f5;
     }
 
-    .year-select {
+    .year-dropdown-trigger {
         background: #2a2a40;
         color: #f0f0f5;
         border-color: var(--border-color);
+    }
+
+    .year-dropdown-trigger:hover {
+        background: #333350;
+        border-color: var(--primary-color);
+    }
+
+    .year-dropdown-menu {
+        background: #2a2a40;
+        border-color: var(--border-color);
+    }
+
+    .year-dropdown-menu li {
+        color: #e0e0e8;
+    }
+
+    .year-dropdown-menu li:hover {
+        background: var(--hover-bg);
+    }
+
+    .year-dropdown-menu li.active {
+        color: var(--primary-color);
+        background: var(--hover-bg);
     }
 
     .toolbar-btn {
