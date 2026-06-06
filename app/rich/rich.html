@@ -543,6 +543,14 @@
                             try {
                                 const rows = await parseCSVFile(fileList[i]);
                                 allData.value = [...allData.value, ...rows.map(preprocessRow)];
+                                // 每读完一个文件就写入缓存（转为纯对象以兼容 IndexedDB structuredClone）
+                                try {
+                                    const plainData = JSON.parse(JSON.stringify(allData.value));
+                                    await IndexedDBHelper.put(DB_NAME, STORE_NAME, { id: DATA_KEY, value: plainData }, DB_VERSION, STORE_CONFIG);
+                                    console.log('[IDB] 写入进度:', i + 1, '/', fileList.length, '共', allData.value.length, '条');
+                                } catch (e) {
+                                    console.warn('[IDB] 写入失败:', fileList[i], e);
+                                }
                             } catch (e) {
                                 console.error('加载失败:', fileList[i], e);
                             }
@@ -552,19 +560,6 @@
                         console.log('[IDB] CSV 加载完成，共', allData.value.length, '条');
                         loading.value = false;
                         loadDone.value = true;
-
-                        // 存入 IndexedDB 缓存
-                        if (allData.value.length > 0) {
-                            try {
-                                console.log('[IDB] 开始写入缓存...');
-                                await IndexedDBHelper.put(DB_NAME, STORE_NAME, { id: DATA_KEY, value: allData.value }, DB_VERSION, STORE_CONFIG);
-                                console.log('[IDB] ✅ 写入成功');
-                            } catch (e) {
-                                console.warn('[IDB] ❌ 写入失败:', e);
-                            }
-                        } else {
-                            console.warn('[IDB] ⚠️ CSV 加载结果为空，跳过写入');
-                        }
                     }
 
                     // 检查URL参数
