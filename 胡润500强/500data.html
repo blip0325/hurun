@@ -322,28 +322,6 @@
             opacity: 0.4;
         }
 
-        /* 加载状态 */
-        .loading-overlay {
-            text-align: center;
-            padding: 40px 20px;
-        }
-
-        .spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid #e9ecef;
-            border-top-color: var(--primary-color);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
         /* 链接样式 */
         .cell-link {
             color: var(--primary-color);
@@ -516,7 +494,7 @@
 
             <!-- 分页 -->
             <pagination-bar
-                v-if="!loading && totalPages > 0"
+                v-if="totalPages > 0"
                 :current-page="currentPage"
                 :total-pages="totalPages"
                 :total-records="filteredData.length"
@@ -529,7 +507,7 @@
             <!-- 表格 -->
             <div class="table-container">
                 <div class="table-scroll" ref="tableScroll">
-                    <table v-if="!loading">
+                    <table>
                         <thead>
                             <tr>
                                 <th
@@ -563,15 +541,11 @@
                             </tr>
                         </tbody>
                     </table>
-                    <div v-else class="loading-overlay">
-                        <div class="spinner"></div>
-                        <p class="text-muted">{{ loadMessage }}</p>
-                    </div>
                 </div>
 
                 <!-- 底部分页 -->
                 <pagination-bar
-                    v-if="!loading && totalPages > 0"
+                    v-if="totalPages > 0"
                     :current-page="currentPage"
                     :total-pages="totalPages"
                     :total-records="filteredData.length"
@@ -609,9 +583,8 @@
 
                 // ===== 响应式状态 =====
                 const allData = ref([]);
-                const loading = ref(true);
+                const loading = ref(false);
                 const loadDone = ref(false);
-                const loadMessage = ref('正在加载数据...');
                 const currentPage = ref(1);
                 const pageSize = ref(50);
                 const sortKey = ref('年份');
@@ -911,20 +884,15 @@
                 }
 
                 async function loadAllData() {
-                    loading.value = true;
-                    loadMessage.value = '正在加载数据...';
-
                     const fileList = [];
                     for (let y = END_YEAR; y >= START_YEAR; y--) {
                         fileList.push(`data/data_${y}.csv`);
                     }
 
-                    const all = [];
                     for (let i = 0; i < fileList.length; i++) {
-                        loadMessage.value = `正在加载 ${END_YEAR - i} 年数据... (${i + 1}/${fileList.length})`;
                         try {
                             const rows = await parseCSVFile(fileList[i]);
-                            all.push(...rows);
+                            allData.value = [...allData.value, ...rows];
                         } catch (e) {
                             console.error('加载失败:', fileList[i], e);
                         }
@@ -932,7 +900,6 @@
                         await new Promise(r => setTimeout(r, 50));
                     }
 
-                    allData.value = all;
                     loading.value = false;
                     loadDone.value = true;
 
@@ -981,7 +948,7 @@
                 // ===== 返回 =====
                 return {
                     // state
-                    allData, loading, loadDone, loadMessage,
+                    allData, loadDone,
                     currentPage, pageSize, sortKey, sortOrder,
                     searchQuery, yearFilter,
                     showColvis, visibleColumns,
