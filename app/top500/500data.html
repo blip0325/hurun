@@ -4,7 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <title>500强胡润</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1a1a2e" media="(prefers-color-scheme: dark)">
 
     <!-- Bootstrap 5 CSS -->
     <link rel="stylesheet" href="../lib/bootstrap.min.css">
@@ -556,6 +558,50 @@
         // 注册分页组件
         app.component('pagination-bar', PaginationBar);
         app.mount('#app');
+    </script>
+
+    <!-- Android WebView 桥接 -->
+    <script>
+        (function() {
+            // 检测是否在 Android WebView 中运行
+            var isAndroidWebView = typeof Android !== 'undefined' &&
+                                   typeof Android.isDarkMode === 'function';
+            if (isAndroidWebView) {
+                document.body.classList.add('android-webview');
+            }
+
+            // 暴露全局桥接方法
+            window.NativeBridge = {
+                isAndroid: isAndroidWebView,
+                goBack: function() {
+                    if (isAndroidWebView && typeof Android.goBack === 'function') {
+                        Android.goBack();
+                    }
+                },
+                isDarkMode: function() {
+                    if (isAndroidWebView && typeof Android.isDarkMode === 'function') {
+                        return Android.isDarkMode();
+                    }
+                    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+                },
+                showToast: function(msg) {
+                    if (isAndroidWebView && typeof Android.showToast === 'function') {
+                        Android.showToast(msg);
+                    }
+                }
+            };
+
+            // 监听系统暗色模式变化，同步到 data-theme 属性
+            var darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            function updateTheme() {
+                document.documentElement.setAttribute(
+                    'data-theme',
+                    darkQuery.matches ? 'dark' : 'light'
+                );
+            }
+            darkQuery.addEventListener('change', updateTheme);
+            updateTheme();
+        })();
     </script>
 </body>
 

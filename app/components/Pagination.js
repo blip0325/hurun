@@ -230,7 +230,7 @@ const PaginationBar = {
         <div class="pagination-wrapper">
             <div class="pagination-left">
                 <span class="page-info">
-                    <span class="info-short">{{ currentPage }}/{{ totalPages }}</span>
+                    <span class="info-short">{{ currentPage }}/{{ totalPages }}({{ totalRecords }})</span>
                     <span class="info-detail">&nbsp;页 · 共 {{ totalRecords }} 条</span>
                 </span>
                 <div class="page-size-group">

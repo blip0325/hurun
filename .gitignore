@@ -1,0 +1,15 @@
+# ========== Android ==========
+# Gradle cache
+android/.gradle/
+android/build/
+android/app/build/
+
+# IDE (Android Studio / IntelliJ)
+android/.idea/
+*.iml
+
+# Local machine config (SDK path etc.)
+android/local.properties
+
+# Generated assets (copied from app/)
+android/app/src/main/assets/

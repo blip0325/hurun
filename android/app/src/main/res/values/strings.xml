@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">胡润榜单</string>
+    <string name="tab_top500">500强</string>
+    <string name="tab_rich">百富榜</string>
+</resources>

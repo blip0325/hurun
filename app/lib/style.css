@@ -419,3 +419,140 @@ tbody tr:nth-child(even):hover {
         gap: 3px;
     }
 }
+
+/* ============================================================
+   Android WebView 适配
+   ============================================================ */
+
+/* Android 状态栏安全区 */
+:root {
+    --android-status-bar-height: 0px;
+    --android-nav-bar-height: 0px;
+}
+
+.android-webview .app-header {
+    padding-top: calc(16px + var(--android-status-bar-height));
+}
+
+.android-webview .app-container {
+    padding-bottom: 0;
+}
+
+/* Android WebView 中隐藏 Web 端底部导航（由 Native 提供） */
+.android-webview .bottom-nav {
+    display: none !important;
+}
+
+/* ============================================================
+   暗色模式（Android WebView + 系统偏好）
+   ============================================================ */
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primary-color: #4da6ff;
+        --border-color: #3a3a4a;
+        --hover-bg: #1a2a3a;
+        --text-muted: #8e8e9a;
+    }
+
+    body {
+        background: #1a1a2e;
+    }
+
+    .app-header {
+        background: #222240;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .app-title {
+        color: #f0f0f5;
+    }
+
+    .search-wrapper {
+        background: #2a2a40;
+        border-color: var(--border-color);
+    }
+
+    .search-wrapper input {
+        color: #f0f0f5;
+    }
+
+    .year-select {
+        background: #2a2a40;
+        color: #f0f0f5;
+        border-color: var(--border-color);
+    }
+
+    .toolbar-btn {
+        background: #2a2a40;
+        color: #c0c0d0;
+        border-color: var(--border-color);
+    }
+
+    .toolbar-btn:hover {
+        background: var(--hover-bg);
+        color: var(--primary-color);
+    }
+
+    .colvis-menu {
+        background: #2a2a40;
+        border-color: var(--border-color);
+    }
+
+    .table-container {
+        background: #222240;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    table {
+        color: #e0e0e8;
+    }
+
+    thead th {
+        background: #2a2a40;
+        color: #c0c0d0;
+        border-bottom-color: var(--border-color);
+    }
+
+    thead th:hover {
+        background: #333350;
+    }
+
+    tbody td {
+        border-bottom-color: #2a2a3a;
+    }
+
+    tbody tr:nth-child(even) {
+        background: #1f1f35;
+    }
+
+    tbody tr:hover,
+    tbody tr:nth-child(even):hover {
+        background: var(--hover-bg);
+    }
+
+    .colvis-menu label:hover {
+        background: var(--hover-bg);
+    }
+
+    .cell-link {
+        color: var(--primary-color);
+    }
+
+    .cell-link:hover {
+        color: #7bc0ff;
+    }
+
+    .text-muted {
+        color: #6a6a7a !important;
+    }
+
+    .empty-state {
+        color: #8e8e9a;
+    }
+
+    .android-webview {
+        --android-status-bar-height: env(safe-area-inset-top, 0px);
+        --android-nav-bar-height: env(safe-area-inset-bottom, 0px);
+    }
+}

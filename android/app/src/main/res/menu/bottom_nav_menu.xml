@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_top500"
+        android:icon="@drawable/ic_business"
+        android:title="@string/tab_top500" />
+    <item
+        android:id="@+id/nav_rich"
+        android:icon="@drawable/ic_trophy"
+        android:title="@string/tab_rich" />
+</menu>
