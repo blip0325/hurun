@@ -290,6 +290,21 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        /** 用默认浏览器打开外部链接 */
+        @android.webkit.JavascriptInterface
+        fun openExternalUrl(url: String) {
+            runOnUiThread {
+                try {
+                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW,
+                        android.net.Uri.parse(url))
+                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    showToast("无法打开链接：${e.message}")
+                }
+            }
+        }
+
         /** 获取当前是否为暗色模式 */
         @android.webkit.JavascriptInterface
         fun isDarkMode(): Boolean = isNightMode()

@@ -26,7 +26,10 @@
         <div class="app-container">
             <!-- 头部 -->
             <div class="app-header">
-                <h1 class="app-title">🏆 胡润百富榜</h1>
+                <div class="title-area">
+                    <h1 class="app-title">🏆 胡润百富榜</h1>
+                    <a class="app-ad-link" href="#" @click.prevent="openAd" title="打开 the404.cn">🎰 百家乐模拟</a>
+                </div>
                 <div class="controls-group">
                     <!-- 年份过滤 -->
                     <div class="year-dropdown" @click.stop>
@@ -413,6 +416,15 @@
                     onYearChange();
                 }
 
+                function openAd() {
+                    const url = 'http://the404.cn';
+                    if (typeof NativeBridge !== 'undefined' && NativeBridge.isAndroid) {
+                        Android.openExternalUrl(url);
+                    } else {
+                        window.open(url, '_blank');
+                    }
+                }
+
                 function onColvisChange() {
                     const anyVisible = HEADERS.some(h => visibleColumns.value[h]);
                     if (!anyVisible) {
@@ -658,7 +670,7 @@
                     totalPages,
                     // methods
                     setSort, goToPage, onPageSizeUpdate,
-                    onYearChange, selectYear, onColvisChange,
+                    onYearChange, selectYear, openAd, onColvisChange,
                     executeSearch, clearSearch, formatCell,
                     handleCellClick, exportCSV
                 };
