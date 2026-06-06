@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>500强胡润</title>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#1a1a2e" media="(prefers-color-scheme: dark)">
@@ -148,6 +149,7 @@
     <!-- Vue 3 + PapaParse -->
     <script src="../lib/vue.global.prod.js"></script>
     <script src="../lib/papaparse.min.js"></script>
+    <script src="../lib/indexdbhelper.js"></script>
     <!-- 底部导航组件 -->
     <script src="../components/BottomNav.js"></script>
     <!-- 分页组件 -->
@@ -471,24 +473,67 @@
                 }
 
                 async function loadAllData() {
-                    const fileList = [];
-                    for (let y = END_YEAR; y >= START_YEAR; y--) {
-                        fileList.push(`data/data_${y}.csv`);
+                    const DB_NAME = 'HurunDB';
+                    const DB_VERSION = 3;
+                    const STORE_NAME = 'top500';
+                    const STORE_CONFIG = [
+                        { name: 'rich', keyPath: 'id' },
+                        { name: 'top500', keyPath: 'id' }
+                    ];
+                    const DATA_KEY = 'data';
+
+                    // 尝试从 IndexedDB 读取缓存
+                    let cached = null;
+                    try {
+                        console.log('[IDB] 尝试读取缓存', DB_NAME, STORE_NAME, DATA_KEY);
+                        const row = await IndexedDBHelper.get(DB_NAME, STORE_NAME, DATA_KEY, DB_VERSION, STORE_CONFIG);
+                        console.log('[IDB] 读取结果:', row);
+                        if (row) cached = row.value;
+                    } catch (e) {
+                        console.warn('[IDB] 读取失败，回退到 CSV:', e);
                     }
 
-                    for (let i = 0; i < fileList.length; i++) {
-                        try {
-                            const rows = await parseCSVFile(fileList[i]);
-                            allData.value = [...allData.value, ...rows];
-                        } catch (e) {
-                            console.error('加载失败:', fileList[i], e);
+                    if (cached && cached.length > 0) {
+                        console.log('[IDB] ✅ 命中缓存，共', cached.length, '条');
+                        allData.value = cached;
+                        loading.value = false;
+                        loadDone.value = true;
+                    } else {
+                        console.log('[IDB] 缓存未命中，从 CSV 加载');
+                        // 从 CSV 加载
+                        const fileList = [];
+                        for (let y = END_YEAR; y >= START_YEAR; y--) {
+                            fileList.push(`data/data_${y}.csv`);
                         }
-                        // 小延迟让UI更新
-                        await new Promise(r => setTimeout(r, 50));
-                    }
 
-                    loading.value = false;
-                    loadDone.value = true;
+                        for (let i = 0; i < fileList.length; i++) {
+                            try {
+                                const rows = await parseCSVFile(fileList[i]);
+                                allData.value = [...allData.value, ...rows];
+                            } catch (e) {
+                                console.error('加载失败:', fileList[i], e);
+                            }
+                            // 小延迟让UI更新
+                            await new Promise(r => setTimeout(r, 50));
+                        }
+
+                        console.log('[IDB] CSV 加载完成，共', allData.value.length, '条');
+                        loading.value = false;
+                        loadDone.value = true;
+
+                        // 存入 IndexedDB 缓存
+                        if (allData.value.length > 0) {
+                            try {
+                                console.log('[IDB] 开始写入缓存...');
+                                await IndexedDBHelper.put(DB_NAME, STORE_NAME, { id: DATA_KEY, value: allData.value }, DB_VERSION, STORE_CONFIG);
+                                console.log('[IDB] ✅ 写入成功');
+                            } catch (e) {
+                                console.warn('[IDB] ❌ 写入失败:', e);
+                            }
+                        } else {
+                            console.warn('[IDB] ⚠️ CSV 加载结果为空，跳过写入');
+                        }
+                    }
 
                     // 检查URL参数
                     const urlParams = new URLSearchParams(window.location.search);
@@ -526,10 +571,10 @@
                 };
 
                 // ===== 生命周期 =====
-                onMounted(() => {
+                onMounted(async () => {
                     document.addEventListener('click', closeColvis);
                     window.addEventListener('popstate', onPopState);
-                    loadAllData();
+                    await loadAllData();
                 });
 
                 // ===== 返回 =====

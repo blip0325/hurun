@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Trophy/Cup shape representing wealth and ranking -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,25 L54,28 M45,30 L63,30 L61,50 C61,55 58,58 54,58 C50,58 47,55 47,50 L45,30 Z M42,30 L38,30 C35,30 33,32 33,35 L33,38 C33,41 35,43 38,43 L42,43 M66,30 L70,30 C73,30 75,32 75,35 L75,38 C75,41 73,43 70,43 L66,43 M49,58 L59,58 L59,62 C59,65 57,67 54,67 C51,67 49,65 49,62 L49,58 Z M46,67 L62,67 L62,70 C62,71 61,72 60,72 L48,72 C47,72 46,71 46,70 L46,67 Z M40,72 L68,72 L68,75 C68,76 67,77 66,77 L42,77 C41,77 40,76 40,75 L40,72 Z"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFFFFF" />
+</vector>
