@@ -6,7 +6,7 @@ on:
       version_name:
         description: "版本号（如 1.0.1）"
         required: true
-        default: "1.0.0"
+        default: "1.0.1"
       version_code:
         description: "版本数字（如 2）"
         required: true
@@ -37,8 +37,12 @@ jobs:
         working-directory: android
         run: gradle assembleRelease -PversionName="${{ github.event.inputs.version_name }}" -PversionCode="${{ github.event.inputs.version_code }}"
 
+      - name: Rename APK
+        working-directory: android/app/build/outputs/apk/release
+        run: mv app-release.apk hurun-v${{ github.event.inputs.version_name }}.apk
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hurun-app
-          path: android/app/build/outputs/apk/release/*.apk
+          name: hurun-v${{ github.event.inputs.version_name }}
+          path: android/app/build/outputs/apk/release/hurun-v${{ github.event.inputs.version_name }}.apk
