@@ -1,0 +1,33 @@
+name: "Create Release"
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "版本号（如 1.0.1）"
+        required: true
+        default: "1.0.0"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download APK artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: build.yml
+          name: hurun-app
+          path: apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: apk/*.apk
+          tag_name: v${{ github.event.inputs.version_name }}
+          name: Release v${{ github.event.inputs.version_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
