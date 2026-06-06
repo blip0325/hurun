@@ -13,3 +13,6 @@ android/local.properties
 
 # Generated assets (copied from app/)
 android/app/src/main/assets/
+
+# Android release APK output
+android/app/release/

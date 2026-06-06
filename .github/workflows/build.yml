@@ -2,6 +2,15 @@ name: "Build APK"
 
 on:
   workflow_dispatch:
+    inputs:
+      version_name:
+        description: "版本号（如 1.0.1）"
+        required: true
+        default: "1.0.0"
+      version_code:
+        description: "版本数字（如 2）"
+        required: true
+        default: "1"
 
 permissions:
   contents: read
@@ -26,7 +35,7 @@ jobs:
 
       - name: Build release APK
         working-directory: android
-        run: gradle assembleRelease
+        run: gradle assembleRelease -PversionName="${{ github.event.inputs.version_name }}" -PversionCode="${{ github.event.inputs.version_code }}"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
