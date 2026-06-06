@@ -160,6 +160,7 @@
     <script src="../lib/papaparse.min.js"></script>
     <script src="../lib/indexdbhelper.js"></script>
     <script src="../lib/hcsearch.js"></script>
+    <script src="../lib/storageHelper.js"></script>
     <!-- 底部导航组件 -->
     <script src="../components/BottomNav.js"></script>
     <!-- 分页组件 -->
@@ -188,8 +189,9 @@
                 const yearFilter = ref('');
                 const showYearMenu = ref(false);
                 const showColvis = ref(false);
+                const savedColvis = StorageHelper.get('colvis_500', null);
                 const visibleColumns = ref(
-                    Object.fromEntries(HEADERS.map(h => [h, true]))
+                    savedColvis || Object.fromEntries(HEADERS.map(h => [h, true]))
                 );
                 const tableScroll = ref(null);
 
@@ -397,6 +399,7 @@
                     if (!anyVisible) {
                         visibleColumns.value[HEADERS[0]] = true;
                     }
+                    StorageHelper.set('colvis_500', visibleColumns.value);
                 }
 
                 function executeSearch() {
