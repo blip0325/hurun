@@ -200,7 +200,7 @@ const PaginationBar = {
             const current = this.currentPage;
             const pages = [];
 
-            if (total <= 11) {
+            if (total <= 7) {
                 for (let i = 1; i <= total; i++) pages.push(i);
             } else {
                 pages.push(1);
