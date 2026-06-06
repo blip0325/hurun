@@ -43,15 +43,6 @@
             color: var(--text-muted, #6c757d);
         }
 
-        .page-size-select {
-            padding: 2px 5px;
-            border: 1px solid var(--border-color, #dee2e6);
-            border-radius: 4px;
-            font-size: 12px;
-            outline: none;
-            cursor: pointer;
-        }
-
         .pagination {
             display: flex;
             align-items: center;
@@ -116,9 +107,6 @@
                 font-size: 11px;
                 gap: 8px;
             }
-            .page-size-select {
-                font-size: 11px;
-            }
             .page-size-group {
                 font-size: 11px;
             }
@@ -144,10 +132,6 @@
                 font-size: 10px;
                 gap: 3px;
                 flex-shrink: 0;
-            }
-            .page-size-select {
-                font-size: 10px;
-                padding: 1px 2px;
             }
             .page-size-group {
                 font-size: 10px;
@@ -175,9 +159,6 @@
                 flex-shrink: 0;
             }
             .page-info .info-detail {
-                display: none;
-            }
-            .page-size-group .ps-label {
                 display: none;
             }
         }
@@ -212,11 +193,14 @@ const PaginationBar = {
                 pages.push(total);
             }
             return pages;
+        },
+        pageSizeOptions() {
+            return this.pageSizes.map(s => ({ label: s + '条', value: s }));
         }
     },
     methods: {
-        onPageSizeChange(e) {
-            this.$emit('update:pageSize', Number(e.target.value));
+        onPageSizeUpdate(value) {
+            this.$emit('update:pageSize', Number(value));
             this.$emit('page-change', 1);
         },
         goToPage(page) {
@@ -234,11 +218,11 @@ const PaginationBar = {
                     <span class="info-detail">&nbsp;页 · 共 {{ totalRecords }} 条</span>
                 </span>
                 <div class="page-size-group">
-                    <span class="ps-label">每页&nbsp;</span>
-                    <select class="page-size-select" :value="pageSize" @change="onPageSizeChange">
-                        <option v-for="s in pageSizes" :key="s" :value="s">{{ s }}</option>
-                    </select>
-                    <span class="ps-label">&nbsp;条</span>
+                    <select-dropdown
+                        :modelValue="pageSize"
+                        :options="pageSizeOptions"
+                        @update:modelValue="onPageSizeUpdate"
+                    ></select-dropdown>
                 </div>
             </div>
             <div class="pagination">
