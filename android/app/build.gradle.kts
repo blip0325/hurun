@@ -45,6 +45,8 @@ tasks.register<Copy>("copyWebAssets") {
     from(fileTree("../../app") {
         include("**/*")
         exclude("**/*.csv")
+        exclude("**/*.ods")
+        exclude("**/data.csv")
     })
     into("src/main/assets/www")
 }
@@ -53,6 +55,7 @@ tasks.register<Copy>("copyDataFiles") {
     description = "Copy CSV data files from ../../app/ to assets/www/"
     from("../../app") {
         include("**/*.csv")
+        exclude("**/data.csv")
     }
     into("src/main/assets/www")
 }
