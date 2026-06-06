@@ -472,19 +472,35 @@
                         }).join(',') + '\n';
                     });
 
-                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                     const filename = '胡润百富榜_export.csv';
-                    const file = new File([blob], filename, { type: 'text/csv;charset=utf-8;' });
-                    if (navigator.share) {
-                        navigator.share({ files: [file] }).catch(() => {});
-                    } else {
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = filename;
-                        a.click();
-                        URL.revokeObjectURL(url);
+
+                    // Android WebView: 使用原生保存到下载目录
+                    if (window.NativeBridge && window.NativeBridge.isAndroid) {
+                        window.NativeBridge.saveCsvToDownloads(csv, filename);
+                        return;
                     }
+
+                    // 浏览器: Web Share API 或下载链接
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const file = new File([blob], filename, { type: 'text/csv;charset=utf-8;' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        navigator.share({ files: [file] }).catch(() => {
+                            downloadFallback(blob, filename);
+                        });
+                    } else {
+                        downloadFallback(blob, filename);
+                    }
+                }
+
+                function downloadFallback(blob, filename) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
                 }
 
                 function stripHtml(html) {
@@ -669,6 +685,11 @@
                 showToast: function(msg) {
                     if (isAndroidWebView && typeof Android.showToast === 'function') {
                         Android.showToast(msg);
+                    }
+                },
+                saveCsvToDownloads: function(csvData, filename) {
+                    if (isAndroidWebView && typeof Android.saveCsvToDownloads === 'function') {
+                        Android.saveCsvToDownloads(csvData, filename);
                     }
                 }
             };

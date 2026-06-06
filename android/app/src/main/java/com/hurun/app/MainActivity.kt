@@ -1,10 +1,13 @@
 package com.hurun.app
 
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -298,6 +301,40 @@ class MainActivity : AppCompatActivity() {
                 com.google.android.material.snackbar.Snackbar
                     .make(binding.root, message, com.google.android.material.snackbar.Snackbar.LENGTH_SHORT)
                     .show()
+            }
+        }
+
+        /** 导出 CSV 到下载目录 */
+        @android.webkit.JavascriptInterface
+        fun saveCsvToDownloads(csvData: String, filename: String) {
+            runOnUiThread {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        val values = ContentValues().apply {
+                            put(MediaStore.Downloads.DISPLAY_NAME, filename)
+                            put(MediaStore.Downloads.MIME_TYPE, "text/csv")
+                            put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                        }
+                        val uri = contentResolver.insert(
+                            MediaStore.Downloads.EXTERNAL_CONTENT_URI, values
+                        )
+                        uri?.let {
+                            contentResolver.openOutputStream(it)?.use { os ->
+                                os.write(csvData.toByteArray(Charsets.UTF_8))
+                            }
+                        }
+                    } else {
+                        @Suppress("DEPRECATION")
+                        val dir = Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_DOWNLOADS
+                        )
+                        val file = java.io.File(dir, filename)
+                        file.writeText(csvData, Charsets.UTF_8)
+                    }
+                    showToast("已导出到下载目录：$filename")
+                } catch (e: Exception) {
+                    showToast("导出失败：${e.message}")
+                }
             }
         }
     }
