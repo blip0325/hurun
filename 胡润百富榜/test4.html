@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>CSV 数据展示</title>
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <!-- DataTables Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <!-- DataTables 扩展 CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+    <!-- 新增：SearchPanes 和 SearchBuilder CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/searchpanes/2.2.0/css/searchPanes.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/searchbuilder/1.7.0/css/searchBuilder.dataTables.min.css">
+
+    <style>
+        .truncate {
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .underline {
+            text-decoration: underline;
+            cursor: pointer;
+            color: blue;
+        }
+    </style>
+</head>
+
+<body class="container mt-4">
+    <div class="mb-3">
+        <select id="yearFilter" class="form-select" style="width:auto;display:inline-block;">
+            <option value="">全部年份</option>
+        </select>
+        <button id="clearSearch" class="btn btn-secondary ms-2">清除搜索</button>
+    </div>
+
+    <table id="csvTable" class="table table-striped table-bordered" style="width:100%">
+        <thead>
+            <tr id="tableHead"></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+    <div id="loadStatus" class="mt-3 text-success fw-bold"></div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- PapaParse -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <!-- DataTables 扩展 JS -->
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <!-- 新增：SearchPanes 和 SearchBuilder JS -->
+    <script src="https://cdn.datatables.net/searchpanes/2.2.0/js/dataTables.searchPanes.min.js"></script>
+    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
+    <script src="https://cdn.datatables.net/searchbuilder/1.7.0/js/dataTables.searchBuilder.min.js"></script>
+
+    <script>
+        const endyear = 2025;
+        const yearSelect = document.getElementById("yearFilter");
+        for (let year = endyear; year >= 1999; year--) {
+            const opt = document.createElement("option");
+            opt.value = year;
+            opt.textContent = year + "年";
+            yearSelect.appendChild(opt);
+        }
+        const files = [];
+        for (let year = endyear; year >= 1999; year--) {
+            files.push(`data/data_${year}.csv`);
+        }
+
+        let table;
+        let headersSet = false;
+        let headersGlobal = [];
+
+        function loadCSV(file, isLast = false) {
+            Papa.parse(file, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function (results) {
+                    const data = results.data;
+                    const headers = results.meta.fields;
+                    headersGlobal = headers;
+
+                    if (!headersSet) {
+                        const headRow = document.getElementById("tableHead");
+                        headRow.innerHTML = "";
+                        headers.forEach(h => {
+                            const th = document.createElement("th");
+                            th.textContent = h;
+                            headRow.appendChild(th);
+                        });
+                        const thIndustry = document.createElement("th");
+                        thIndustry.textContent = "行业";
+                        headRow.appendChild(thIndustry);
+                        headersSet = true;
+
+                        table = $("#csvTable").DataTable({
+                            order: [[0, 'desc']],
+                            pageLength: 200,
+                            lengthMenu: [20, 50, 100, 200, 500, 1000],
+                            responsive: false,
+                            // 新增：启用 SearchPanes 和 SearchBuilder
+                            // l - length 长度改变分页大小
+                            // f - filtering 过滤输入框
+                            // t - table 表格本身
+                            // i - information 信息概览
+                            // p - pagination 翻页控制
+                            // r - proccessing 处理中显示元素
+                            // Q - SearchBuilder
+                            // P - SearchPanes
+                            dom: 'QPfrtiplB',
+                            buttons: ['copy', 'csv'],
+                            colReorder: true,
+                            deferRender: true,
+                            scrollY: "500px",
+                            scrollCollapse: true,
+                            paging: true,
+                            searchPanes: {
+                                cascadePanes: true,
+                                viewTotal: true
+                            },
+                            searchBuilder: {
+                                columns: [0, 1, 2, 3],
+                                conditions: {
+                                    string: {
+                                        contains: '模糊匹配',
+                                        equals: '精确匹配'
+                                    }
+                                }
+                            },
+                            language: {
+                                search: "搜索:",
+                                searchPanes: {
+                                    title: '筛选条件'
+                                },
+                                searchBuilder: {
+                                    title: '高级查询',
+                                    condition: '条件',
+                                    clearAll: '清除全部'
+                                }
+                            },
+                            columnDefs: [
+                                {
+                                    //显示SearchPanes
+                                    searchPanes: {
+                                        show: true
+                                    },
+                                    targets: [0, 1, 2] // 指定列索引
+                                },
+                                { targets: 0, width: "70px" },
+                                { targets: 1, width: "70px" },
+                                { targets: 2, width: "70px" },
+                                { targets: 3, width: "100px" },
+                                {
+                                    targets: "_all",
+                                    render: function (data, type, row, meta) {
+                                        if (headersGlobal[meta.col] === "个人信息" || headersGlobal[meta.col] === "企业信息") {
+                                            return data;
+                                        }
+                                        if (type === 'display' && data) {
+                                            return '<span class="truncate" title="' + data + '">' + data + '</span>';
+                                        }
+                                        return data;
+                                    }
+                                }
+                            ]
+                        });
+
+                        $('#csvTable_filter input').on('keyup', function (e) {
+                            var value = $.trim(this.value);
+                            table.search(value).draw();
+                        });
+                        $("#yearFilter").on("change", function () {
+                            const val = $(this).val();
+                            if (val) {
+                                table.column(headers.indexOf("年份")).search("^" + val + "$", true, false).draw();
+                            } else {
+                                table.column(headers.indexOf("年份")).search("").draw();
+                            }
+                        });
+                    }
+
+                    data.forEach(row => {
+                        const rowData = [];
+                        headers.forEach(h => {
+                            let value = row[h];
+                            if (h === "个人信息" && value) {
+                                const match = value.match(/(.+?)(先生|女士|未知)(.*)/);
+                                if (match) {
+                                    const namePart = match[1].trim();
+                                    const suffix = match[2] + match[3];
+                                    value = '<a href="#" class="truncate underline" onclick="triggerSearch(\'' + namePart + '\')">' + namePart + '</a>' + suffix;
+                                }
+                            }
+                            if (h === "企业信息" && value) {
+                                const parts = value.split("行业：");
+                                if (parts.length === 2) {
+                                    value = parts[0].trim();
+                                }
+                                const stopIndex = value.search(/集团|公司/);
+                                if (stopIndex > -1) {
+                                    const namePart = value.substring(0, stopIndex).trim();
+                                    const suffix = value.substring(stopIndex);
+                                    value = '<a href="#" class="truncate underline" onclick="triggerSearch(\'' + namePart + '\')">' + namePart + '</a>' + suffix;
+                                } else {
+                                    value = '<a href="#" class="truncate underline" onclick="triggerSearch(\'' + value + '\')">' + value + '</a>';
+                                }
+                            }
+                            rowData.push(value);
+                        });
+
+                        let industry = "";
+                        if (row["企业信息"]) {
+                            const parts = row["企业信息"].split("行业：");
+                            if (parts.length === 2) {
+                                industry = parts[1].trim();
+                            }
+                        }
+                        rowData.push(industry);
+
+                        table.row.add(rowData);
+                    });
+
+                    table.draw(false);
+
+                    if (isLast) {
+                        document.getElementById("loadStatus").textContent = "✅ 所有数据已加载完成，可以查询全部数据";
+                    }
+                }
+            });
+        }
+
+        // 新增：点击链接触发搜索
+        function triggerSearch(keyword) {
+            $('#csvTable_filter input').val(keyword);
+            table.search(keyword).draw();
+        }
+
+        // 新增：清除搜索按钮事件
+        document.getElementById("clearSearch").addEventListener("click", function () {
+            $('#csvTable_filter input').val("");   // 清空搜索框
+            table.search("").draw();               // 清除搜索条件并刷新表格
+        });
+
+        (async function () {
+            for (let i = 0; i < files.length; i++) {
+                await new Promise(resolve => {
+                    loadCSV(files[i], i === files.length - 1);
+                    setTimeout(resolve, 300);
+                });
+            }
+        })();
+    </script>
+</body>
+
+</html>

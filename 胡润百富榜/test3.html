@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>胡润百富榜展示</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <!-- DataTables Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <!-- DataTables 扩展 CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        td{
+            white-space: nowrap;
+        }
+        .truncate {
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* 新增：下划线样式 */
+        .underline {
+            display: inline-block;
+            vertical-align: middle;
+            text-decoration: underline;
+            cursor: pointer;
+            color: blue;
+        }
+
+        @media (max-width: 600px) {     
+            th{
+                display: none;
+            }       
+            th:nth-child(4),
+            td:nth-child(4){
+                display: none;
+            }            
+        }
+    </style>
+</head>
+
+<body class="container mt-4">
+    <div class="input-group mb-3" style="max-width:200px;">
+        <select id="yearFilter" class="form-select" style="width:auto;display:inline-block;">
+            <option value="">全部年份</option>
+        </select>
+    </div>
+
+    <div class="input-group mb-3" style="max-width:400px;">
+        <span class="input-group-text">搜索</span>
+        <input type="text" id="customSearch" class="form-control" placeholder="输入关键词...">
+        <button id="clearSearch" class="btn btn-danger btn-lg" title="清除搜索">
+            <i class="bi bi-x-circle"></i>
+        </button>
+    </div>
+    <div style="overflow-x:auto;">
+        <table id="csvTable" class="table table-striped table-bordered" style="width:100%">
+            <thead>
+                <tr id="tableHead"></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+    <div id="loadStatus" class="mt-3 text-success fw-bold"></div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+
+    <script>
+        const endyear = 2025;
+        const yearSelect = document.getElementById("yearFilter");
+        for (let year = endyear; year >= 1999; year--) {
+            const opt = document.createElement("option");
+            opt.value = year;
+            opt.textContent = year + "年";
+            yearSelect.appendChild(opt);
+        }
+        const files = [];
+        for (let year = endyear; year >= 1999; year--) {
+            files.push(`data/data_${year}.csv`);
+        }
+
+        let table;
+        let headersSet = false;
+        let headersGlobal = []; // 新增：全局保存 headers
+
+        function loadCSV(file, isLast = false) {
+            Papa.parse(file, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function (results) {
+                    const data = results.data;
+                    const headers = results.meta.fields;
+                    headersGlobal = headers; // 新增：赋值给全局变量
+
+                    if (!headersSet) {
+                        const headRow = document.getElementById("tableHead");
+                        headRow.innerHTML = "";
+                        headers.forEach(h => {
+                            const th = document.createElement("th");
+                            th.textContent = h;
+                            headRow.appendChild(th);
+                        });
+                        const thIndustry = document.createElement("th");
+                        thIndustry.textContent = "行业";
+                        headRow.appendChild(thIndustry);
+                        headersSet = true;
+
+                        table = $("#csvTable").DataTable({
+                            responsive: true,
+                            order: [[0, 'desc']], //设置第一列排序
+                            pageLength: 200,
+                            lengthMenu: [20, 50, 100, 200, 500, 1000],
+                            responsive: false,
+                            // l - length 长度改变分页大小
+                            // f - filtering 过滤输入框
+                            // t - table 表格本身
+                            // i - information 信息概览
+                            // p - pagination 翻页控制
+                            // r - proccessing 处理中显示元素
+                            dom: 'triplB',
+                            buttons: ['copy', 'csv'],
+                            colReorder: true,
+                            deferRender: true,
+                            scrollY: "600px",
+                            scrollCollapse: true,
+                            paging: true,
+                            language: {
+                                search: "搜索:",
+                            },
+                            columnDefs: [                                
+                                { targets: 0, width: "50px" },
+                                { targets: 1, width: "50px" },
+                                { targets: 2, width: "70px", type: 'currency' },
+                                { targets: 3, width: "100px", type: 'sort' },
+                                {
+                                    targets: "_all",
+                                    render: function (data, type, row, meta) {
+                                        // 新增：如果是个人信息列，直接返回 HTML
+                                        if (headersGlobal[meta.col] === "个人信息" || headersGlobal[meta.col] === "企业信息") {
+                                            return data;
+                                        }
+                                        if (type === 'display' && data) {
+                                            return '<span class="truncate" title="' + data + '">' + data + '</span>';
+                                        }
+                                        return data;
+                                    }
+                                }
+                            ]
+                        });
+                        $.fn.dataTable.ext.type.order['currency-pre'] = function (data) {
+                            if (!data) return 0;
+                            // 去掉 ￥ 和 亿，保留数字
+                            let num = data.replace(/[￥,\s亿]/g, '');
+                            return parseFloat(num) || 0;
+                        };
+                        $.fn.dataTable.ext.type.order['sort-pre'] = function (data) {
+                            if (!data) return 0;
+                            return parseFloat(data) || 0;
+                        };
+                        $('#csvTable_filter input,#customSearch').on('keyup', function (e) {
+                            var value = $.trim(this.value);
+                            table.search(value).draw();
+                        });
+                        $("#yearFilter").on("change", function () {
+                            const val = $(this).val();
+                            if (val) {
+                                table.column(headers.indexOf("年份")).search("^" + val + "$", true, false).draw();
+                            } else {
+                                table.column(headers.indexOf("年份")).search("").draw();
+                            }
+                        });
+                    }
+
+                    data.forEach(row => {
+                        const rowData = [];
+                        headers.forEach(h => {
+                            let value = row[h];
+                            // 新增：处理个人信息列
+                            if (h === "个人信息" && value) {
+                                const match = value.match(/(.+?)(先生|女士|未知)(.*)/);
+                                if (match) {
+                                    const namePart = match[1].trim();
+                                    const suffix = match[2] + match[3];
+                                    value = '<span class="truncate underline" onclick="triggerSearch(\'' + namePart + '\')">' + namePart + '</span>' + '<span class="truncate">' + suffix + '</span>';
+                                }
+                            }
+                            if (h === "企业信息" && value) {
+                                const parts = value.split("行业：");
+                                if (parts.length === 2) {
+                                    value = parts[0].trim();
+                                }
+                                const stopIndex = value.search(/集团|公司/);
+                                if (stopIndex > -1) {
+                                    const namePart = value.substring(0, stopIndex).trim();
+                                    const suffix = value.substring(stopIndex);
+                                    value = '<span class="truncate underline" onclick="triggerSearch(\'' + namePart + '\')">' + namePart + '</span>' + '<span class="truncate">' + suffix + '</span>';
+                                } else {
+                                    value = '<span class="truncate underline" onclick="triggerSearch(\'' + value + '\')">' + value + '</span>';
+                                }
+                            }
+                            rowData.push(value);
+                        });
+
+                        let industry = "";
+                        if (row["企业信息"]) {
+                            const parts = row["企业信息"].split("行业：");
+                            if (parts.length === 2) {
+                                industry = parts[1].trim();
+                            }
+                        }
+                        rowData.push(industry);
+
+                        table.row.add(rowData);
+                    });
+
+                    table.draw(false);
+
+                    if (isLast) {
+                        document.getElementById("loadStatus").textContent = "✅ 所有数据已加载完成，可以查询全部数据";
+                    }
+                }
+            });
+        }
+
+        // 新增：点击链接触发搜索
+        function triggerSearch(keyword) {
+            $('#csvTable_filter input,#customSearch').val(keyword);
+            table.search(keyword).draw();
+        }
+
+        // 新增：清除搜索按钮事件
+        document.getElementById("clearSearch").addEventListener("click", function () {
+            $('#csvTable_filter input,#customSearch').val("");   // 清空搜索框
+            table.search("").draw();               // 清除搜索条件并刷新表格
+        });
+
+        // 新增: 自定义搜索
+        document.getElementById("customSearch").addEventListener("keyup", function () {
+            let value = $.trim(this.value);
+            table.search(value).draw(); // 模糊匹配            
+        });
+
+        (async function () {
+            for (let i = 0; i < files.length; i++) {
+                await new Promise(resolve => {
+                    loadCSV(files[i], i === files.length - 1);
+                    setTimeout(resolve, 300);
+                });
+            }
+        })();
+    </script>
+</body>
+
+</html>

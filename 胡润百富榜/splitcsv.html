@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>按年份拆分 CSV</title>
+</head>
+
+<body class="container mt-4">
+    <h2 class="mb-4">上传 CSV 并按年份拆分</h2>
+    <input type="file" id="csvFile" />
+    <div id="status" style="margin-top:20px;color:green;font-weight:bold;"></div>
+
+    <!-- PapaParse -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script>
+        document.getElementById("csvFile").addEventListener("change", function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function (results) {
+                    const data = results.data;
+                    const grouped = {};
+
+                    // 按年份分组，不限制范围
+                    data.forEach(row => {
+                        const yearRaw = row["年份"];
+                        if (yearRaw) {
+                            const yearStr = String(yearRaw).trim().replace("年", "");
+                            const yearNum = parseInt(yearStr, 10);
+                            if (!isNaN(yearNum)) {
+                                if (!grouped[yearNum]) grouped[yearNum] = [];
+                                grouped[yearNum].push(row);
+                            }
+                        }
+                    });
+
+                    const years = Object.keys(grouped).sort((a, b) => a - b);
+                    let i = 0;
+
+                    function downloadNext() {
+                        if (i >= years.length) {
+                            document.getElementById("status").textContent = "✅ 所有年份的文件已下载完成";
+                            return;
+                        }
+                        const year = years[i];
+                        const rows = grouped[year];
+                        const csv = Papa.unparse(rows);
+                        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                        const link = document.createElement("a");
+                        link.href = URL.createObjectURL(blob);
+                        link.download = `data_${year}.csv`;
+                        link.click();
+                        i++;
+                        setTimeout(downloadNext, 500); // 每隔 500ms 下载一个，避免浏览器拦截
+                    }
+
+                    downloadNext();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
